@@ -1,1 +1,1 @@
-# CSC322-EWasteBidding
+# CSC322 E-Waste Bidding
