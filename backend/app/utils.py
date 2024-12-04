@@ -1,11 +1,11 @@
-from werkzeug.utils import secure_filename  # To secure the filename
-import os  # For environment variables
-from supabase import create_client  # To interact with Supabase storage
+from werkzeug.utils import secure_filename  
+import os  
+from supabase import create_client  
 
 # Initialize Supabase client
-SUPABASE_URL = os.getenv("SUPABASE_URL")  # Retrieve Supabase URL from .env
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")  # Retrieve Supabase Key from .env
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)  # Create Supabase client
+SUPABASE_URL = os.getenv("SUPABASE_URL")  
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")  
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)  
 
 def upload_image(file, bucket_name="item-images"):
     try:
@@ -23,9 +23,6 @@ def upload_image(file, bucket_name="item-images"):
 
         # Upload the file to Supabase Storage
         response = supabase.storage.from_(bucket_name).upload(file_path, file_content)
-
-        # Debug: Print the response to inspect its structure
-        print(response)
 
         # Check if the upload was successful
         if hasattr(response, "error") and response.error:
