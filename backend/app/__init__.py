@@ -15,4 +15,7 @@ def create_app():
     from app.api.items import items_api  # Import the items blueprint
     app.register_blueprint(items_api, url_prefix="/api/v1")
 
+    from app.api.users import users_api
+    app.register_blueprint(users_api, url_prefix="/api/v1/users")
+
     return app

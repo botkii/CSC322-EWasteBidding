@@ -1,11 +1,5 @@
-from werkzeug.utils import secure_filename  
-import os  
-from supabase import create_client  
-
-# Initialize Supabase client
-SUPABASE_URL = os.getenv("SUPABASE_URL")  
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")  
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)  
+from werkzeug.utils import secure_filename   
+from app.db import supabase  
 
 def upload_image(file, bucket_name="item-images"):
     try:
