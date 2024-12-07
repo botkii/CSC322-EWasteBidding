@@ -55,11 +55,9 @@ def register_user():
         if existing_user.data:
             return jsonify({"success": False, "error": "Email already exists"}), 400
 
-        # Hash password and create the user
-        hashed_password = generate_password_hash(password)
         new_user = {
             "email": email,
-            "password": hashed_password,
+            "password": password,
             "name": name,
             "account_type": "User"
         }
@@ -72,3 +70,7 @@ def register_user():
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+    
+
+
+
