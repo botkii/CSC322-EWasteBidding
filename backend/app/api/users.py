@@ -4,6 +4,8 @@ from app.db import supabase  # Assumes you have initialized Supabase client
 from werkzeug.security import generate_password_hash, check_password_hash
 import random
 
+print("Loading users_api blueprint...")
+
 users_api = Blueprint("users_api", __name__)
 
 # Store the math question and answer in memory
@@ -71,6 +73,47 @@ def register_user():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
     
+@users_api.route("/auth/login", methods=["POST"])
+def login_user():
+    """
+    Handle user login.
+    """
+    if not request.is_json:
+        return jsonify({"success": False, "error": "Request must be JSON"}), 400
 
+    try:
+        # Parse the JSON request
+        request_data = request.get_json()
+        email = request_data.get("email")
+        password = request_data.get("password")
 
+        # Validate input
+        if not email or not password:
+            return jsonify({"success": False, "error": "Email and password are required"}), 400
 
+        # Query the database for the user
+        response = supabase.table("users").select("*").eq("email", email).execute()
+
+        if not response.data:
+            return jsonify({"success": False, "error": "Invalid email or password"}), 401
+
+        user = response.data[0]  # Assuming the email is unique and we get a single result
+
+        # Validate the password
+        if user["password"] != password:
+            return jsonify({"success": False, "error": "Invalid email or password"}), 401
+
+        # If login is successful
+        return jsonify({
+            "success": True,
+            "message": "User logged in successfully",
+            "user": {
+                "id": user["id"],
+                "email": user["email"],
+                "name": user["name"],
+                "account_type": user["account_type"],
+                "balance": user["balance"],
+            },
+        }), 200
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500

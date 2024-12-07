@@ -3,6 +3,8 @@ from app.utils import upload_image
 from app.db import supabase  # Assuming this initializes the Supabase client
 from datetime import datetime
 
+print("Loading items_api blueprint...")
+
 items_api = Blueprint("items_api", __name__)
 
 @items_api.route("/items", methods=["POST"])
@@ -88,3 +90,5 @@ def place_bid():
         return jsonify({"success": True, "bid": bid_response.data[0]}), 201
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
+
