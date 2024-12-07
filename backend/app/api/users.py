@@ -4,8 +4,6 @@ from app.db import supabase  # Assumes you have initialized Supabase client
 from werkzeug.security import generate_password_hash, check_password_hash
 import random
 
-print("Loading users_api blueprint...")
-
 users_api = Blueprint("users_api", __name__)
 
 # Store the math question and answer in memory
@@ -115,5 +113,81 @@ def login_user():
                 "balance": user["balance"],
             },
         }), 200
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@users_api.route("/deposit", methods=["POST"])
+def deposit():
+    """
+    Allows a user to deposit money into their account.
+    """
+    try:
+        request_data = request.get_json()
+        user_id = request_data.get("user_id")
+        amount = request_data.get("amount")
+
+        # Validate user_id
+        if not user_id:
+            return jsonify({"success": False, "error": "User ID is required"}), 400
+
+        # Validate amount
+        try:
+            amount = float(amount)
+        except (TypeError, ValueError):
+            return jsonify({"success": False, "error": "Amount must be a valid number"}), 400
+
+        if amount <= 0:
+            return jsonify({"success": False, "error": "Deposit amount must be positive"}), 400
+
+        # Fetch the user's current balance
+        user_response = supabase.table("users").select("balance").eq("id", user_id).execute()
+        if not user_response.data:
+            return jsonify({"success": False, "error": "User not found"}), 404
+
+        current_balance = user_response.data[0]["balance"]
+        new_balance = current_balance + amount
+        supabase.table("users").update({"balance": new_balance}).eq("id", user_id).execute()
+
+        return jsonify({"success": True, "message": "Deposit successful", "balance": new_balance}), 200
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@users_api.route("/withdraw", methods=["POST"])
+def withdraw():
+    """
+    Allows a user to withdraw money from their account.
+    """
+    try:
+        request_data = request.get_json()
+        user_id = request_data.get("user_id")
+        amount = request_data.get("amount")
+
+        # Validate user_id
+        if not user_id:
+            return jsonify({"success": False, "error": "User ID is required"}), 400
+
+        # Validate amount
+        try:
+            amount = float(amount)
+        except (TypeError, ValueError):
+            return jsonify({"success": False, "error": "Amount must be a valid number"}), 400
+
+        if amount <= 0:
+            return jsonify({"success": False, "error": "Withdraw amount must be positive"}), 400
+
+        # Fetch the user's current balance
+        user_response = supabase.table("users").select("balance").eq("id", user_id).execute()
+        if not user_response.data:
+            return jsonify({"success": False, "error": "User not found"}), 404
+
+        current_balance = user_response.data[0]["balance"]
+        if amount > current_balance:
+            return jsonify({"success": False, "error": "Insufficient funds"}), 400
+
+        new_balance = current_balance - amount
+        supabase.table("users").update({"balance": new_balance}).eq("id", user_id).execute()
+
+        return jsonify({"success": True, "message": "Withdrawal successful", "balance": new_balance}), 200
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500

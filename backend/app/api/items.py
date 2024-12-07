@@ -3,7 +3,6 @@ from app.utils import upload_image
 from app.db import supabase  # Assuming this initializes the Supabase client
 from datetime import datetime
 
-print("Loading items_api blueprint...")
 
 items_api = Blueprint("items_api", __name__)
 

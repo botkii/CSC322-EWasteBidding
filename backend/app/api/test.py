@@ -2,8 +2,6 @@ from flask import Blueprint, jsonify
 import os
 from app.db import test_users_table
 
-print("Loading test_api blueprint...")
-
 test_api = Blueprint("test_api", __name__)
 
 # Route to test Supabase environment variables
