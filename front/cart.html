@@ -14,19 +14,48 @@
             <a href="#"><img src="images/logo.png" class = "logo" alt =""></a>
             </div>
                 <ul id="navbar">
-                    <li><a class = "active" href = "index.html">Home</a></li>
+                    <li><a  href = "index.html">Home</a></li>
                     <li><a href = "active_listing.html">Active Listings</a></li>
                     <li><a href = "about.html">About</li> 
                     <li><a href = "support.html">Support</li> 
                     <li><a href = "user_profile.html"><i class="fas fa-user"></i></li>
                     <!-- <li><a href = "vipuser_profile.html"><i class="fas fa-user-plus"></i></li> -->
-                    <li><a href = "cart.html"><i class = "far fa-shopping-bag"></i></a></li>
+                    <li><a class = "active" href = "cart.html"><i class = "far fa-shopping-bag"></i></a></li>
                 </ul>
             </div>
             <div id="mobile">
                 <a href = "cart.html"><i class = "far fa-shopping-bag"></i></a>
                 <i id="bar" class="fas fa-outdent"></i>
             </div>
+        </section>
+
+        <section>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Total</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>GameBoy Advance SP</td>
+                        <td>$127</td>
+                        <td>
+                            <input type="number" value="1" min="1">
+                        </td>
+                        <td>$127</td>
+                        <td>
+                            <button>Remove</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <h2>Cart Total: $127</h2>
+            <button onclick="location.href='checkout.html'">Proceed to Checkout</button>
         </section>
 
         <footer class="section-p1">
