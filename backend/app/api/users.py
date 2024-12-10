@@ -1,5 +1,6 @@
 #user-related routes
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, request, jsonify, session, current_app
+from functools import wraps
 from app.db import supabase  # Assumes you have initialized Supabase client
 #from werkzeug.security import generate_password_hash, check_password_hash
 import random
@@ -7,6 +8,7 @@ from datetime import datetime, timezone
 
 
 users_api = Blueprint("users_api", __name__)
+
 
 # Function to generate random arithmetic questions
 def generate_math_question():
@@ -106,6 +108,7 @@ def register_user():
         return jsonify({"success": False, "error": str(e) if str(e) else "Unknown error"}), 500
 
 
+# Updated login route to include JWT
 @users_api.route("/auth/login", methods=["POST"])
 def login_user():
     """
@@ -115,28 +118,27 @@ def login_user():
         return jsonify({"success": False, "error": "Request must be JSON"}), 400
 
     try:
-        # Parse the JSON request
         request_data = request.get_json()
         email = request_data.get("email")
         password = request_data.get("password")
 
-        # Validate input
         if not email or not password:
             return jsonify({"success": False, "error": "Email and password are required"}), 400
 
-        # Query the database for the user
         response = supabase.table("users").select("*").eq("email", email).execute()
 
         if not response.data:
             return jsonify({"success": False, "error": "Invalid email or password"}), 401
 
-        user = response.data[0]  # Assuming the email is unique and we get a single result
+        user = response.data[0]
 
-        # Validate the password
         if user["password"] != password:
             return jsonify({"success": False, "error": "Invalid email or password"}), 401
 
-        # If login is successful
+        # Set session or any other mechanism for tracking logged-in state
+        session["user_id"] = user["id"]
+        session["account_type"] = user["account_type"]
+
         return jsonify({
             "success": True,
             "message": "User logged in successfully",
@@ -150,6 +152,72 @@ def login_user():
         }), 200
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
+@users_api.route("/browse", methods=["GET"])
+def browse():
+    """
+    Route accessible by all users, including visitors and logged-in users, to browse items.
+    """
+    try:
+        # Example query to fetch items from the database
+        items_response = supabase.table("items").select("*").execute()
+        if not items_response.data:
+            return jsonify({"success": True, "items": [], "message": "No items available"}), 200
+
+        # Determine user role (Visitor by default)
+        if "user_id" in session:
+            user_role = session.get("account_type", "User")
+        else:
+            user_role = "Visitor"
+
+        return jsonify({
+            "success": True,
+            "role": user_role,
+            "items": items_response.data,
+        }), 200
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@users_api.route("/add-comment", methods=["POST"])
+def add_comment():
+    """
+    Allows visitors or logged-in users to add comments.
+    """
+    if not request.is_json:
+        return jsonify({"success": False, "error": "Request must be JSON"}), 400
+
+    try:
+        data = request.get_json()
+        item_id = data.get("item_id")
+        comment = data.get("comment")
+
+        if not item_id or not comment:
+            return jsonify({"success": False, "error": "Item ID and comment are required"}), 400
+
+        # Check if the user is logged in
+        user_id = session.get("user_id")
+        user_name = "Anonymous"
+
+        if user_id:
+            # Fetch the user's name from the database
+            user_response = supabase.table("users").select("name").eq("id", user_id).execute()
+            if user_response.data:
+                user_name = user_response.data[0]["name"]
+
+        # Add the comment to the database
+        supabase.table("comments").insert({
+            "item_id": item_id,
+            "comment": comment,
+            "user_id": user_id,  # Null for visitors
+            "user_name": user_name,  # 'Anonymous' for visitors
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }).execute()
+
+        return jsonify({"success": True, "message": "Comment added successfully"}), 201
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 
 @users_api.route("/deposit", methods=["POST"])
 def deposit():
@@ -228,6 +296,41 @@ def withdraw():
         return jsonify({"success": False, "error": str(e)}), 500
 
 # Admin methods
+
+@users_api.route("/admin/tasks/pending", methods=["GET"])
+def fetch_pending_tasks():
+    """
+    Fetch all pending tasks for Admin/SuperUser from the admin_tasks table.
+    """
+    try:
+        # Parse query parameters
+        admin_id = request.args.get("admin_id")  # ID of the Admin/SuperUser
+        task_type = request.args.get("task_type", None)  # Optional filter by task type
+
+        # Validate admin_id
+        if not admin_id:
+            return jsonify({"success": False, "error": "Admin ID is required"}), 400
+
+        # Check if the requester is an Admin or SuperUser
+        admin_response = supabase.table("users").select("account_type").eq("id", admin_id).execute()
+        if not admin_response.data or admin_response.data[0]["account_type"] not in ["Admin", "SuperUser"]:
+            return jsonify({"success": False, "error": "Unauthorized access"}), 403
+
+        # Build the query
+        query = supabase.table("admin_tasks").select("*").eq("status", "pending")
+        if task_type:
+            query = query.eq("task_type", task_type)
+
+        # Execute the query
+        response = query.execute()
+
+        if response.data:
+            return jsonify({"success": True, "tasks": response.data}), 200
+        else:
+            return jsonify({"success": True, "tasks": [], "message": "No pending tasks found."}), 200
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
 
 # Approve Visitor Requests to become Users
 @users_api.route("/admin/request/approve", methods=["POST"])
@@ -455,6 +558,51 @@ def unsuspend_user():
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
+@users_api.route("/admin/approve-user", methods=["POST"])
+def approve_user_request():
+    """
+    Admin/SuperUser approves a user's request to become a registered user.
+    """
+    if not request.is_json:
+        return jsonify({"success": False, "error": "Request must be JSON"}), 400
+
+    try:
+        data = request.get_json()
+        admin_id = data.get("admin_id")  # ID of the Admin/SuperUser
+        task_id = data.get("task_id")  # ID of the approval task in admin_tasks
+
+        if not admin_id or not task_id:
+            return jsonify({"success": False, "error": "Admin ID and Task ID are required"}), 400
+
+        # Check admin privileges
+        admin_response = supabase.table("users").select("account_type").eq("id", admin_id).execute()
+        if not admin_response.data or admin_response.data[0]["account_type"] not in ["Admin", "SuperUser"]:
+            return jsonify({"success": False, "error": "Unauthorized access"}), 403
+
+        # Fetch the task from admin_tasks
+        task_response = supabase.table("admin_tasks").select("*").eq("id", task_id).execute()
+        if not task_response.data or task_response.data[0]["task_type"] != "approve_user":
+            return jsonify({"success": False, "error": "Invalid or non-existent approval task"}), 404
+
+        task = task_response.data[0]
+        user_id = task["user_id"]
+
+        # Approve the user and update account_type to "User"
+        supabase.table("users").update({
+            "approval_status": "approved",
+            "account_type": "User"  # Change the account type to User
+        }).eq("id", user_id).execute()
+
+        # Mark the task as completed
+        supabase.table("admin_tasks").update({"status": "completed"}).eq("id", task_id).execute()
+
+        return jsonify({"success": True, "message": "User request approved successfully."}), 200
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 
 
 

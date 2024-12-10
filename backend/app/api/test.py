@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, current_app
 import os
 from app.db import test_users_table
 
@@ -22,6 +22,10 @@ def test_users():
         return jsonify({"success": True, "users": data}), 200
     else:
         return jsonify({"success": True, "users": [], "message": "No users found"}), 200
+    
+
+
+
     
 
 
