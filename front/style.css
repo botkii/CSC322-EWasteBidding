@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 
+/* general styles*/
 * {
     margin: 0;
     padding: 0;
@@ -17,6 +18,7 @@ h1 {
 
 h2 {
     font-size: 46px;
+    padding-top: 30px;
     line-height: 54px;
     color: #222;
 }
@@ -49,6 +51,7 @@ body {
     width: 100%;
 }
 
+/* main page */
 #header {
     display: flex;
     align-items: center;
@@ -136,6 +139,7 @@ body {
     font-size: 15px;
 }
 
+/* featured style */
 #feature {
     display: flex;
     align-items: center;
@@ -171,6 +175,7 @@ body {
     background-color: #fddde4;
 }
 
+/* product style */
 #product1 {
     text-align: center;
 }
@@ -316,34 +321,34 @@ body {
     cursor: pointer;
 }
 
-/* Table Styling */
-table {
+/* cart style */
+#cart table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
 }
 
-table th, table td {
+#cart table th, table td {
     padding: 10px;
     text-align: left;
     border-bottom: 1px solid #ddd;
 }
 
-table th {
+#cart table th {
     background: #088178;
     color: white;
 }
 
-table tr:nth-child(even) {
+#cart table tr:nth-child(even) {
     background: #f9f9f9;
 }
 
-table tr:hover {
+#cart table tr:hover {
     background: #f1f1f1;
 }
 
 /* Cart Total */
-h2 {
+#cart h2 {
     display: flex;
     margin-top: 20px;
     font-size: 1.5rem;
@@ -351,11 +356,11 @@ h2 {
 }
 
 /* Cart Remove Button */
-button {
+#cart button {
     background: #57a8a3;
 }
 
-button:hover {
+#cart button:hover {
     background: #c53038;
 }
 
