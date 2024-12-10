@@ -14,10 +14,10 @@
             <a href="#"><img src="images/logo.png" class = "logo" alt =""></a>
             </div>
                 <ul id="navbar">
-                    <li><a class = "active" href = "index.html">Home</a></li>
+                    <li><a  href = "index.html">Home</a></li>
                     <li><a href = "active_listing.html">Active Listings</a></li>
                     <li><a href = "about.html">About</li> 
-                    <li><a href = "support.html">Support</li> 
+                    <li><a class = "active" href = "support.html">Support</li> 
                     <li><a href = "user_profile.html"><i class="fas fa-user"></i></li>
                     <!-- <li><a href = "vipuser_profile.html"><i class="fas fa-user-plus"></i></li> -->
                     <li><a href = "cart.html"><i class = "far fa-shopping-bag"></i></a></li>
@@ -27,6 +27,22 @@
                 <a href = "cart.html"><i class = "far fa-shopping-bag"></i></a>
                 <i id="bar" class="fas fa-outdent"></i>
             </div>
+        </section>
+
+        <section id="support">
+            <h2>How Can We Help?</h2>
+            <form action="support_submit.html" method="post">
+                <label for="name">Your Name:</label>
+                <input type="text" id="name" name="name" required>
+                <label for="email">Your Email:</label>
+                <input type="email" id="email" name="email" required>
+                <label for="message">Your Message:</label>
+                <textarea id="message" name="message" rows="4" required></textarea>
+                <button type="submit">Submit</button>
+            </form>
+            <h2>Contact Information</h2>
+            <p>Email: support@example.com</p>
+            <p>Phone: +1 234 567 890</p>
         </section>
 
         <footer class="section-p1">
@@ -57,7 +73,7 @@
             <div class="credits">
                 <p>E-Waste Market - Group K: Mudassir Sami, Eduardo Torres, Kenneth Wong</p>
             </div>
-            
+        </footer>
 
         <script src="script.js"></script>
     </body>
