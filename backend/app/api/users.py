@@ -270,6 +270,49 @@ def add_comment():
         return jsonify({"success": True, "message": "Comment added successfully"}), 201
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+    
+@users_api.route("/submit-complaint", methods=["POST"])
+def submit_complaint():
+    """
+    Allows a user to submit a complaint against another user.
+    """
+    if not request.is_json:
+        return jsonify({"success": False, "error": "Request must be JSON"}), 400
+
+    try:
+        data = request.get_json()
+        complainant_id = data.get("complainant_id")
+        target_user_id = data.get("target_user_id")
+        description = data.get("description")
+
+        if not complainant_id or not target_user_id or not description:
+            return jsonify({"success": False, "error": "Missing required fields"}), 400
+
+        # Ensure the target user exists
+        user_response = supabase.table("users").select("id, complaint_count").eq("id", target_user_id).execute()
+        if not user_response.data:
+            return jsonify({"success": False, "error": "Target user not found"}), 404
+
+        # Fetch the current complaint count
+        current_complaint_count = user_response.data[0].get("complaint_count", 0)
+
+        # Insert the complaint into the complaints table
+        supabase.table("complaints").insert({
+            "complainant_id": complainant_id,
+            "target_user_id": target_user_id,
+            "description": description
+        }).execute()
+
+        # Increment the complaint count manually
+        supabase.table("users").update({
+            "complaint_count": current_complaint_count + 1
+        }).eq("id", target_user_id).execute()
+
+        return jsonify({"success": True, "message": "Complaint submitted successfully"}), 201
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 
 @users_api.route("/balance", methods=["GET"])
 @restrict_banned_users

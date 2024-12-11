@@ -148,7 +148,7 @@ def process_transaction():
             return jsonify({"success": False, "error": "Item is already sold"}), 400
 
         # Fetch buyer details
-        buyer_response = supabase.table("users").select("balance, account_type, id").eq("id", buyer_id).execute()
+        buyer_response = supabase.table("users").select("balance, account_type, id, transaction_count").eq("id", buyer_id).execute()
         if not buyer_response.data:
             return jsonify({"success": False, "error": "Buyer not found"}), 404
 
@@ -164,15 +164,20 @@ def process_transaction():
             return jsonify({"success": False, "error": "Insufficient funds"}), 400
 
         # Fetch seller details
-        seller_response = supabase.table("users").select("balance").eq("id", seller_id).execute()
+        seller_response = supabase.table("users").select("balance, transaction_count").eq("id", seller_id).execute()
         if not seller_response.data:
             return jsonify({"success": False, "error": "Seller not found"}), 404
 
-        seller_balance = seller_response.data[0]["balance"]
+        seller = seller_response.data[0]
+        seller_balance = seller["balance"]
 
         # Deduct from buyer and credit to seller
         supabase.table("users").update({"balance": buyer_balance - agreed_amount}).eq("id", buyer_id).execute()
         supabase.table("users").update({"balance": seller_balance + agreed_amount}).eq("id", seller_id).execute()
+
+        # Increment transaction counts
+        supabase.table("users").update({"transaction_count": buyer["transaction_count"] + 1}).eq("id", buyer_id).execute()
+        supabase.table("users").update({"transaction_count": seller["transaction_count"] + 1}).eq("id", seller_id).execute()
 
         # Mark item as sold
         supabase.table("items").update({"is_sold": True}).eq("id", item_id).execute()
@@ -194,5 +199,7 @@ def process_transaction():
         }), 200
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
+
 
 

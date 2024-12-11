@@ -23,14 +23,14 @@ def init_scheduler(app):
         id='suspend_check',
         func=check_and_suspend_users,
         trigger='interval',
-        minutes=10
+        minutes=5
     )
     
     scheduler.add_job(
         id='ban_check', 
         func=automatic_ban_users,
         trigger='interval', 
-        minutes=10
+        minutes=5
     )
     
     scheduler.start()
