@@ -157,6 +157,48 @@ def login_user():
         }), 200
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
+@users_api.route("/user-info", methods=["GET"])
+def get_user_info():
+    """
+    Fetch a user's information based on their user_id.
+    """
+    if not request.is_json:
+        return jsonify({"success": False, "error": "Request must be JSON"}), 400
+
+    try:
+        # Get the user_id from the request
+        data = request.get_json()
+        user_id = data.get("user_id")
+
+        if not user_id:
+            return jsonify({"success": False, "error": "User ID is required"}), 400
+
+        # Fetch the user's information from the database
+        user_response = supabase.table("users").select("id, name, email, balance, account_type, complaint_count, rating, transaction_count").eq("id", user_id).execute()
+
+        if not user_response.data:
+            return jsonify({"success": False, "error": "User not found"}), 404
+
+        user = user_response.data[0]
+
+        return jsonify({
+            "success": True,
+            "user": {
+                "id": user["id"],
+                "name": user["name"],
+                "email": user["email"],
+                "balance": user["balance"],
+                "account_type": user["account_type"],
+                "complaint_count": user.get("complaint_count", 0),
+                "rating": user.get("rating", 0),
+                "transaction_count": user.get("transaction_count", 0),
+            }
+        }), 200
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
     
 @users_api.route("/upgrade-to-vip", methods=["POST"])
 def upgrade_to_vip():
