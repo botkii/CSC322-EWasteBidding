@@ -27,3 +27,29 @@ def upload_image(file, bucket_name="item-images"):
         return {"success": True, "url": public_url}
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+def perform_user_suspensions():
+    """
+    Core suspension logic without Flask routing
+    """
+    try:
+        users_response = supabase.table("users").select("id, rating, rating_count, suspension_status").execute()
+        if not users_response.data:
+            return False
+
+        for user in users_response.data:
+            user_id = user["id"]
+            rating = user["rating"]
+            rating_count = user["rating_count"]
+            suspension_status = user["suspension_status"]
+
+            if suspension_status:
+                continue
+
+            if rating_count >= 3 and (rating < 2 or rating > 4):
+                supabase.table("users").update({"suspension_status": True}).eq("id", user_id).execute()
+
+        return True
+    except Exception as e:
+        print(f"Error in perform_user_suspensions: {e}")
+        return False

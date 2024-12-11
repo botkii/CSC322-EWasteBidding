@@ -6,6 +6,7 @@ from app.db import supabase  # Assumes you have initialized Supabase client
 #from werkzeug.security import generate_password_hash, check_password_hash
 import random
 from datetime import datetime, timezone
+from app.utils import perform_user_suspensions
 
 
 users_api = Blueprint("users_api", __name__)
@@ -602,30 +603,12 @@ def approve_quit():
 
 @users_api.route("/check-suspensions", methods=["POST"])
 def check_user_suspensions():
-    """
-    Check all users and suspend those who meet the criteria for low or extreme ratings.
-    """
     try:
-        # Fetch all users with rating and rating_count
-        users_response = supabase.table("users").select("id, rating, rating_count, suspension_status").execute()
-        if not users_response.data:
-            return jsonify({"success": False, "message": "No users to evaluate"}), 200
-
-        for user in users_response.data:
-            user_id = user["id"]
-            rating = user["rating"]
-            rating_count = user["rating_count"]
-            suspension_status = user["suspension_status"]
-
-            # Skip already suspended users
-            if suspension_status:
-                continue
-
-            # Suspend user if criteria are met
-            if rating_count >= 3 and (rating < 2 or rating > 4):
-                supabase.table("users").update({"suspension_status": True}).eq("id", user_id).execute()
-
-        return jsonify({"success": True, "message": "Suspension checks completed"}), 200
+        success = perform_user_suspensions()
+        return jsonify({
+            "success": success,
+            "message": "Suspension checks completed" if success else "No users to evaluate"
+        }), 200
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 

@@ -1,8 +1,7 @@
-# scheduler.py
 from flask_apscheduler import APScheduler
 import logging
-from app.api.users import check_user_suspensions
 from app.db import supabase
+from app.utils import perform_user_suspensions  # Import only from utils
 
 # Configure logging
 logging.basicConfig(
@@ -18,18 +17,26 @@ def init_scheduler(app):
     scheduler = APScheduler()
     scheduler.init_app(app)
     
-    # Explicitly define jobs
+    # Create wrapper functions that include app context
+    def run_suspend_check():
+        with app.app_context():
+            check_and_suspend_users()
+            
+    def run_ban_check():
+        with app.app_context():
+            automatic_ban_users()
+    
     scheduler.add_job(
         id='suspend_check',
-        func=check_and_suspend_users,
+        func=run_suspend_check,
         trigger='interval',
         minutes=5
     )
     
     scheduler.add_job(
         id='ban_check', 
-        func=automatic_ban_users,
-        trigger='interval', 
+        func=run_ban_check,
+        trigger='interval',
         minutes=5
     )
     
@@ -39,12 +46,12 @@ def check_and_suspend_users():
     """
     Run the user suspension check with application context.
     """
-    from flask import current_app
     logging.debug("Starting the check_and_suspend_users job.")
     try:
-        # Call the suspension function
-        response = check_user_suspensions()
-        logging.info(f"Suspension check completed successfully: {response.get_json()}")
+        if perform_user_suspensions():
+            logging.info("Suspension check completed successfully")
+        else:
+            logging.info("No users to evaluate for suspension")
     except Exception as e:
         logging.error(f"Error in check_and_suspend_users: {e}")
 
