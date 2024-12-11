@@ -1,6 +1,7 @@
 #user-related routes
 from flask import Blueprint, request, jsonify, session, current_app
 from functools import wraps
+from app.middlewares import restrict_banned_users
 from app.db import supabase  # Assumes you have initialized Supabase client
 #from werkzeug.security import generate_password_hash, check_password_hash
 import random
@@ -135,6 +136,9 @@ def login_user():
         if user["password"] != password:
             return jsonify({"success": False, "error": "Invalid email or password"}), 401
 
+        if user["banned"]:
+            return jsonify({"success": False, "error": "Access restricted for banned users"}), 403
+
         # Set session or any other mechanism for tracking logged-in state
         session["user_id"] = user["id"]
         session["account_type"] = user["account_type"]
@@ -152,6 +156,7 @@ def login_user():
         }), 200
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
 
 @users_api.route("/browse", methods=["GET"])
 def browse():
@@ -178,7 +183,56 @@ def browse():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
+@users_api.route("/rate-user", methods=["POST"])
+@restrict_banned_users
+def rate_user():
+    """
+    Allows users to rate another user (buyer/seller).
+    """
+    if not request.is_json:
+        return jsonify({"success": False, "error": "Request must be JSON"}), 400
+
+    try:
+        data = request.get_json()
+        target_user_id = data.get("user_id")  # The user being rated
+        rating = data.get("rating")
+
+        # Validate inputs
+        if not target_user_id or rating is None:
+            return jsonify({"success": False, "error": "User ID and rating are required"}), 400
+        if not (0 <= rating <= 5):
+            return jsonify({"success": False, "error": "Rating must be between 0 and 5"}), 400
+
+        # Fetch the user's current rating and rating count
+        user_response = supabase.table("users").select("rating, rating_count").eq("id", target_user_id).execute()
+        if not user_response.data:
+            return jsonify({"success": False, "error": "User not found"}), 404
+
+        user = user_response.data[0]
+        current_rating = user.get("rating", 0)
+        rating_count = user.get("rating_count", 0)
+
+        # Calculate the new average rating
+        new_rating = ((current_rating * rating_count) + rating) / (rating_count + 1)
+
+        # Update the user's rating and rating count
+        supabase.table("users").update({
+            "rating": new_rating,
+            "rating_count": rating_count + 1
+        }).eq("id", target_user_id).execute()
+
+        return jsonify({
+            "success": True,
+            "message": "User rated successfully",
+            "new_rating": new_rating,
+            "rating_count": rating_count + 1
+        }), 200
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 @users_api.route("/add-comment", methods=["POST"])
+@restrict_banned_users
 def add_comment():
     """
     Allows visitors or logged-in users to add comments.
@@ -217,9 +271,38 @@ def add_comment():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
+@users_api.route("/balance", methods=["GET"])
+@restrict_banned_users
+def get_user_balance():
+    """
+    Fetch a user's balance.
+    """
+    if not request.is_json:
+        return jsonify({"success": False, "error": "Request must be JSON"}), 400
+
+    try:
+        # Get the user_id from the request body
+        data = request.get_json()
+        user_id = data.get("user_id")
+
+        if not user_id:
+            return jsonify({"success": False, "error": "User ID is required"}), 400
+
+        # Query the user's balance from the database
+        response = supabase.table("users").select("balance").eq("id", user_id).execute()
+
+        if not response.data:
+            return jsonify({"success": False, "error": "User not found"}), 404
+
+        balance = response.data[0]["balance"]
+        return jsonify({"success": True, "balance": balance}), 200
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 @users_api.route("/deposit", methods=["POST"])
+@restrict_banned_users
 def deposit():
     """
     Allows a user to deposit money into their account.
@@ -257,6 +340,7 @@ def deposit():
 
 
 @users_api.route("/withdraw", methods=["POST"])
+@restrict_banned_users
 def withdraw():
     """
     Allows a user to withdraw money from their account.
@@ -473,47 +557,39 @@ def approve_quit():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-
-
-@users_api.route("/admin/ban-user", methods=["POST"])
-def ban_user():
+@users_api.route("/check-suspensions", methods=["POST"])
+def check_user_suspensions():
     """
-    Ban a user after exceeding suspension limits.
+    Check all users and suspend those who meet the criteria for low or extreme ratings.
     """
-    if not request.is_json:
-        return jsonify({"success": False, "error": "Request must be JSON"}), 400
-
     try:
-        data = request.get_json()
-        user_id = data.get("user_id")
-        admin_id = data.get("admin_id")
+        # Fetch all users with rating and rating_count
+        users_response = supabase.table("users").select("id, rating, rating_count, suspension_status").execute()
+        if not users_response.data:
+            return jsonify({"success": False, "message": "No users to evaluate"}), 200
 
-        # Check admin privileges
-        admin_response = supabase.table("users").select("account_type").eq("id", admin_id).execute()
-        if not admin_response.data or admin_response.data[0]["account_type"] not in ["Admin", "SuperUser"]:
-            return jsonify({"success": False, "error": "Unauthorized access"}), 403
+        for user in users_response.data:
+            user_id = user["id"]
+            rating = user["rating"]
+            rating_count = user["rating_count"]
+            suspension_status = user["suspension_status"]
 
-        # Fetch user details
-        user_response = supabase.table("users").select("suspension_count").eq("id", user_id).execute()
-        if not user_response.data:
-            return jsonify({"success": False, "error": "User not found"}), 404
+            # Skip already suspended users
+            if suspension_status:
+                continue
 
-        suspension_count = user_response.data[0].get("suspension_count", 0)
+            # Suspend user if criteria are met
+            if rating_count >= 3 and (rating < 2 or rating > 4):
+                supabase.table("users").update({"suspension_status": True}).eq("id", user_id).execute()
 
-        if suspension_count >= 3:
-            # Mark user as banned
-            supabase.table("users").update({"banned": True}).eq("id", user_id).execute()
-            return jsonify({"success": True, "message": "User has been banned after exceeding suspension limits."}), 200
-
-        return jsonify({"success": False, "error": "User has not exceeded suspension limits."}), 400
+        return jsonify({"success": True, "message": "Suspension checks completed"}), 200
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
-
 
 @users_api.route("/admin/unsuspend-user", methods=["POST"])
 def unsuspend_user():
     """
-    Unsuspend a user based on admin approval or payment of fine.
+    Unsuspend a user based on admin approval or payment of fine, and reset ratings upon reactivation.
     """
     if not request.is_json:
         return jsonify({"success": False, "error": "Request must be JSON"}), 400
@@ -532,29 +608,43 @@ def unsuspend_user():
         if not admin_response.data or admin_response.data[0]["account_type"] not in ["Admin", "SuperUser"]:
             return jsonify({"success": False, "error": "Unauthorized access"}), 403
 
+        # Fetch user details
+        user_response = supabase.table("users").select("balance, suspension_status").eq("id", user_id).execute()
+        if not user_response.data:
+            return jsonify({"success": False, "error": "User not found"}), 404
+
+        user = user_response.data[0]
+
+        if not user["suspension_status"]:
+            return jsonify({"success": False, "error": "User is not suspended"}), 400
+
         if payment_option == "pay_fine":
-            # Fetch user balance
-            user_response = supabase.table("users").select("balance").eq("id", user_id).execute()
-            if not user_response.data:
-                return jsonify({"success": False, "error": "User not found"}), 404
+            # Check user balance
+            balance = user["balance"]
 
-            balance = user_response.data[0]["balance"]
-
-            # Check if user has enough balance to pay the fine
             if balance < 50:
                 return jsonify({"success": False, "error": "Insufficient balance to pay the suspension fine."}), 400
 
-            # Deduct fine from user balance and update suspension status
+            # Deduct fine from user balance
             new_balance = balance - 50
-            supabase.table("users").update({"balance": new_balance, "suspension_status": False}).eq("id", user_id).execute()
+            supabase.table("users").update({"balance": new_balance}).eq("id", user_id).execute()
 
         elif payment_option == "admin_approval":
-            # Directly update suspension status with admin approval
-            supabase.table("users").update({"suspension_status": False}).eq("id", user_id).execute()
+            # Admin approval case
+            pass  # No additional steps required for admin approval
+
         else:
             return jsonify({"success": False, "error": "Invalid payment option"}), 400
 
-        return jsonify({"success": True, "message": "User unsuspended successfully."}), 200
+        # Reset ratings and unsuspend the user
+        supabase.table("users").update({
+            "suspension_status": False,
+            "rating": 0,
+            "rating_count": 0,
+            "suspension_reason": None
+        }).eq("id", user_id).execute()
+
+        return jsonify({"success": True, "message": "User unsuspended successfully, and ratings reset."}), 200
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500

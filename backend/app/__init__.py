@@ -8,9 +8,6 @@ def create_app():
     app.config.from_object(Config)  # Load configurations
     CORS(app)
 
-    from app.api.test import test_api
-    app.register_blueprint(test_api, url_prefix="/api/v1/test")
-
     # Register items blueprint
     from app.api.items import items_api  # Import the items blueprint
     app.register_blueprint(items_api, url_prefix="/api/v1")
