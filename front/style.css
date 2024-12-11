@@ -205,8 +205,8 @@ body {
 }
 
 #product1 .pro img {
-    width: 450px;
-    height: 450px;
+    width: 300px;
+    height: 300px;
     object-fit: cover;
     border-radius: 20px;
 }
@@ -365,24 +365,24 @@ body {
 }
 
 
-footer {
+#footer {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
 }
 
-footer .col {
+#footer .col {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     margin-bottom: 20px;
 }
 
-footer .logo {
+#footer .logo {
     margin-bottom: 30px;
 }
 
-footer .copyright {
+#footer .copyright {
     width: 100%;
     text-align: center;
 }
