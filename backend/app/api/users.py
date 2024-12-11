@@ -157,6 +157,48 @@ def login_user():
         }), 200
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+    
+@users_api.route("/upgrade-to-vip", methods=["POST"])
+def upgrade_to_vip():
+    """
+    Automatically upgrades users to VIP status if they meet the criteria:
+    - Balance > $5,000
+    - More than 5 transactions
+    - 0 complaints
+    """
+    if not request.is_json:
+        return jsonify({"success": False, "error": "Request must be JSON"}), 400
+
+    try:
+        data = request.get_json()
+        user_id = data.get("user_id")
+
+        if not user_id:
+            return jsonify({"success": False, "error": "User ID is required"}), 400
+
+        # Fetch user details
+        user_response = supabase.table("users").select("balance, transaction_count, complaint_count, account_type").eq("id", user_id).execute()
+        if not user_response.data:
+            return jsonify({"success": False, "error": "User not found"}), 404
+
+        user = user_response.data[0]
+
+        # Check if user meets VIP criteria
+        if (
+            user["balance"] > 5000 and
+            user["transaction_count"] > 5 and
+            user["complaint_count"] == 0 and
+            user["account_type"] != "VIP"
+        ):
+            # Upgrade to VIP
+            supabase.table("users").update({"account_type": "VIP"}).eq("id", user_id).execute()
+            return jsonify({"success": True, "message": "User upgraded to VIP successfully"}), 200
+
+        return jsonify({"success": False, "message": "User does not meet VIP criteria"}), 400
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
 
 
 @users_api.route("/browse", methods=["GET"])
@@ -313,6 +355,31 @@ def submit_complaint():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
+@users_api.route("/fetch-complaints", methods=["GET"])
+def fetch_complaints():
+    """
+    Fetch complaints submitted against a specific user.
+    """
+    if not request.is_json:
+        return jsonify({"success": False, "error": "Request must be JSON"}), 400
+
+    try:
+        # Parse the request data
+        data = request.get_json()
+        user_id = data.get("user_id")  # The user whose complaints are being fetched
+
+        if not user_id:
+            return jsonify({"success": False, "error": "User ID is required"}), 400
+
+        # Fetch complaints for the specified user
+        response = supabase.table("complaints").select("*").eq("target_user_id", user_id).execute()
+
+        if not response.data:
+            return jsonify({"success": True, "complaints": [], "message": "No complaints found for this user"}), 200
+
+        return jsonify({"success": True, "complaints": response.data}), 200
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 @users_api.route("/balance", methods=["GET"])

@@ -33,7 +33,7 @@ def perform_user_suspensions():
     Core suspension logic without Flask routing
     """
     try:
-        users_response = supabase.table("users").select("id, rating, rating_count, suspension_status").execute()
+        users_response = supabase.table("users").select("id, rating, rating_count, suspension_status, suspension_count, account_type").execute()
         if not users_response.data:
             return False
 
@@ -41,13 +41,25 @@ def perform_user_suspensions():
             user_id = user["id"]
             rating = user["rating"]
             rating_count = user["rating_count"]
-            suspension_status = user["suspension_status"]
+            suspension_status = user["suspension_status"] 
+            suspension_count = user.get("suspension_count", 0)  # Get current count, default to 0
+            account_type = user["account_type"]
 
             if suspension_status:
                 continue
 
             if rating_count >= 3 and (rating < 2 or rating > 4):
-                supabase.table("users").update({"suspension_status": True}).eq("id", user_id).execute()
+                if account_type == "VIP":
+                    # VIP gets demoted to regular User instead of being suspended
+                    supabase.table("users").update({
+                        "account_type": "User"
+                    }).eq("id", user_id).execute()
+                else:
+                    # Regular users get suspended and suspension count increased
+                    supabase.table("users").update({
+                        "suspension_status": True,
+                        "suspension_count": suspension_count + 1
+                    }).eq("id", user_id).execute()
 
         return True
     except Exception as e:

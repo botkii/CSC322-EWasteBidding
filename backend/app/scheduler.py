@@ -1,11 +1,11 @@
 from flask_apscheduler import APScheduler
 import logging
 from app.db import supabase
-from app.utils import perform_user_suspensions  # Import only from utils
+from app.utils import perform_user_suspensions
 
-# Configure logging
+# Configure logging to show only INFO and ERROR messages
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[logging.StreamHandler()]
 )
@@ -46,7 +46,6 @@ def check_and_suspend_users():
     """
     Run the user suspension check with application context.
     """
-    logging.debug("Starting the check_and_suspend_users job.")
     try:
         if perform_user_suspensions():
             logging.info("Suspension check completed successfully")
@@ -59,21 +58,16 @@ def automatic_ban_users():
     """
     Automatically ban users with a suspension count of 3 or more.
     """
-    logging.debug("Starting the automatic_ban_users job.")
     try:
-        # Fetch users with suspension_count >= 3 and not already banned
         users_response = supabase.table("users").select("id, suspension_count, banned").execute()
-        logging.info(f"Fetched {len(users_response.data)} users for evaluation.")
         
         if not users_response.data:
-            logging.info("No users to evaluate for banning.")
             return
 
         for user in users_response.data:
             if user["suspension_count"] >= 3 and not user.get("banned", False):
-                # Ban the user
                 supabase.table("users").update({"banned": True}).eq("id", user["id"]).execute()
-                logging.info(f"User with ID {user['id']} has been automatically banned.")
+                logging.info(f"User {user['id']} has been banned")
 
     except Exception as e:
         logging.error(f"Error during automatic ban process: {e}")
