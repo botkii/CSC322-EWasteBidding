@@ -11,6 +11,7 @@ function renderHeader() {
           <li><a href="active_listing.html" ${currentPage === "active_listing.html" ? 'class="active"' : ""}>Active Listings</a></li>
           <li><a href="about.html" ${currentPage === "about.html" ? 'class="active"' : ""}>About</a></li>
           <li><a href="support.html" ${currentPage === "support.html" ? 'class="active"' : ""}>Support</a></li>
+          <li><a href="login.html" ${currentPage === "login.html" ? 'class="active"' : ""}>Log In / Sign Up</a></li>
           <li><a href="user_profile.html" ${currentPage === "user_profile.html" ? 'class="active"' : ""}><i class="fas fa-user"></i></a></li>
       </ul>
       <div id="mobile">
