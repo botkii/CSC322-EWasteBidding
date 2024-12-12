@@ -19,7 +19,8 @@ const userData = {
             description: "Barely used, great for trails",
             status: "pending"
         }
-    ]
+    ],
+    ratings: 3.0,
 };
 
 // Function to generate profile HTML
