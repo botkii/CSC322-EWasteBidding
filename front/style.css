@@ -322,6 +322,77 @@ body {
     right: 10px;
 }
 
+.bidding-section {
+    margin: 20px 0;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+.current-bid-info {
+    margin-bottom: 20px;
+}
+
+.highest-bid {
+    font-size: 24px;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.bid-input-group {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+}
+
+.currency {
+    padding: 8px;
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-right: none;
+    border-radius: 4px 0 0 4px;
+}
+
+#bidAmount {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 0 4px 4px 0;
+}
+
+.bid-button {
+    width: 100%;
+    padding: 10px;
+    background: #2c3e50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.bid-history {
+    margin-top: 20px;
+}
+
+.bid-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.min-bid {
+    color: #666;
+    font-size: 0.9em;
+    margin: 5px 0;
+}
+
+.time-remaining {
+    color: #e74c3c;
+    font-weight: bold;
+}
+
 #pagenav {
     text-align: center;
 }
