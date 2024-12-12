@@ -97,11 +97,12 @@ const products = [
   },
 ];
 
+// In activelistings.js
 const productContainer = document.getElementById("productContainer");
 if (productContainer) {
   products.forEach((product, index) => {
     const productHTML = `
-      <div class="pro" data-index="${index}">
+      <div class="pro">
         <img src="${product.img}" alt="${product.name}">
         <div class="des">
           <span>${product.brand}</span>
@@ -119,23 +120,19 @@ if (productContainer) {
           </div>
           <h4>$${product.price}</h4>
         </div>
-        <a href="#" class="cart"><i class="fal fa-shopping-cart"></i></a>
+        <a href="product.html?id=${index}" class="cart"><i class="fal fa-shopping-cart"></i></a>
       </div>
     `;
     productContainer.insertAdjacentHTML("beforeend", productHTML);
   });
 
-  // Delegate click events
+  // Add click event to entire product card
   productContainer.addEventListener("click", (event) => {
-    const card = event.target.closest(".pro");
-    if (card) {
-      const index = card.getAttribute("data-index");
-      window.location.href = `listing_item.html?index=${index}`;
-    }
-
-    if (event.target.classList.contains("cart")) {
-      event.preventDefault();
-      alert("Added to cart!");
+    const productCard = event.target.closest('.pro');
+    if (productCard) {
+      const index = Array.from(productContainer.children).indexOf(productCard);
+      
+      window.location.href = `product.html?id=${index}`;
     }
   });
 }
