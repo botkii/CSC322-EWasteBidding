@@ -1,4 +1,4 @@
-function renderSupport(){
+function renderAbout(){
     document.getElementById("support").innerHTML = `
             <h2>How Can We Help?</h2>
             <form action="support_submit.html" method="post">
@@ -16,7 +16,7 @@ function renderSupport(){
 }
 
 document.addEventListener("DOMContentLoaded", () =>{
-    renderSupport();
+    renderAbout();
 });
     
 

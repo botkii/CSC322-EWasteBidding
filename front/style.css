@@ -175,6 +175,75 @@ body {
     background-color: #fddde4;
 }
 
+/* Main container */
+.about-container {
+    min-height: 100vh;
+    background-color: white;
+    padding: 2rem;
+}
+
+/* Header section */
+.about-header {
+    text-align: center;
+    padding: 3rem 0;
+    background-color: #f8f9fa;
+    margin-bottom: 3rem;
+}
+
+.about-header h1 {
+    font-size: 3.5rem;
+    color: #333;
+    margin: 0;
+    font-weight: 600;
+}
+
+/* Story section */
+.story-section {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    margin-bottom: 5px;
+}
+
+.story-box {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 2rem;
+}
+
+.story-box h2 {
+    color: #333;
+    font-size: 1.8rem;
+    margin: 0 0 1.5rem 0;
+}
+
+.story-box p {
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .about-header h1 {
+        font-size: 2.5rem;
+    }
+
+    .story-box {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .about-header {
+        padding: 2rem 0;
+    }
+
+    .about-header h1 {
+        font-size: 2rem;
+    }
+}
 /* product style */
 #product1 {
     text-align: center;
@@ -364,6 +433,286 @@ body {
     background: #c53038;
 }
 
+/* Profile Container */
+#profile-container {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Profile Header */
+.profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.profile-header h2 {
+    margin: 0;
+    color: #333;
+    font-size: 1.5rem;
+}
+
+/* Status Badge */
+.status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.status-badge.active {
+    background-color: #e6f4ea;
+    color: #1e7e34;
+}
+
+.status-badge.inactive {
+    background-color: #feeced;
+    color: #dc3545;
+}
+
+/* User Information */
+.user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.info-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.info-group label {
+    color: #666;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.info-group p {
+    margin: 0;
+    color: #333;
+    font-size: 1rem;
+}
+
+/* Balance specific styling */
+.info-group p:contains("$") {
+    color: #2e7d32;
+    font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+    #profile-container {
+        margin: 1rem;
+        padding: 1.5rem;
+    }
+
+    .profile-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .status-badge {
+        align-self: flex-start;
+    }
+}
+
+/* Listings Section */
+.listings-section {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #eee;
+}
+
+.listings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.listings-header h3 {
+    margin: 0;
+    color: #333;
+}
+
+.add-listing-btn {
+    padding: 0.5rem 1rem;
+    background-color: #088178;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.add-listing-btn:hover {
+    background-color: #088178;
+}
+
+/* Listing Form */
+.listing-form {
+    background-color: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.form-group textarea {
+    height: 100px;
+    resize: vertical;
+}
+
+.form-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.submit-btn,
+.cancel-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.submit-btn {
+    background-color: #28a745;
+    color: white;
+}
+
+.cancel-btn {
+    background-color: #dc3545;
+    color: white;
+}
+
+/* Listings Grid */
+.listings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+/* Listing Card */
+.listing-card {
+    background-color: white;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.listing-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 0.5rem;
+}
+
+.listing-header h4 {
+    margin: 0;
+    color: #333;
+}
+
+.listing-status {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+}
+
+.listing-status.active {
+    background-color: #e6f4ea;
+    color: #1e7e34;
+}
+
+.listing-status.pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.listing-price {
+    color: #2e7d32;
+    font-weight: 500;
+    font-size: 1.125rem;
+    margin: 0.5rem 0;
+}
+
+.listing-description {
+    color: #666;
+    font-size: 0.875rem;
+    margin: 0.5rem 0;
+}
+
+.listing-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.listing-actions button {
+    padding: 0.25rem 0.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.875rem;
+}
+
+.listing-actions button:first-child {
+    background-color: #007bff;
+    color: white;
+}
+
+.listing-actions button:last-child {
+    background-color: #dc3545;
+    color: white;
+}
+
+.no-listings {
+    text-align: center;
+    color: #666;
+    font-style: italic;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .listings-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-buttons {
+        flex-direction: column;
+    }
+}
 
 #footer {
     display: flex;
